@@ -22,9 +22,10 @@ export async function fetchGenres(): Promise<Genre[]> {
 
 export async function fetchRandomPhrase(
   genre: string = "all",
-  artist: string = ""
+  artist: string = "",
+  lang: string = "any"
 ): Promise<PhraseResult> {
-  const params = new URLSearchParams({ action: "random", genre });
+  const params = new URLSearchParams({ action: "random", genre, lang });
   if (artist.trim()) params.set("artist", artist.trim());
   const res = await fetch(`${API_URL}/?${params}`);
   return res.json();

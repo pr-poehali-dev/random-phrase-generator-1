@@ -32,6 +32,34 @@ GENRE_QUERIES = {
     "rnb": ["soul music", "rhythm blues", "groove", "smooth", "feels"],
 }
 
+RUSSIAN_ARTISTS = [
+    "Земфира", "Кино", "Виктор Цой", "Сплин", "Би-2", "Ария",
+    "Алиса", "ДДТ", "Nautilus Pompilius", "Наутилус Помпилиус",
+    "Океан Ельзи", "Ленинград", "Рамштайн", "Мумий Тролль",
+    "Brainstorm", "Zveri", "Звери", "Чайф", "Пикник",
+    "Lumen", "Люмен", "Агата Кристи", "Король и Шут",
+    "Тараканы", "Порнофильмы", "Элизиум", "Loqiemean",
+    "FACE", "Pharaoh", "Фараон", "IC3PEAK", "Оксимирон",
+    "Noize MC", "Баста", "Гуф", "Смоки Мо", "Centr",
+    "Anacondaz", "Markul", "Maruv", "Niletto", "Jah Khalib",
+    "Макс Барских", "Настя Каменских", "Олег Кензов",
+    "Иван Дорн", "Дима Билан", "Филипп Киркоров",
+    "Валерия", "Пугачева", "Алла Пугачёва", "Николай Басков",
+    "Рoтару", "София Ротару", "Полина Гагарина",
+    "Ёлка", "МакSим", "Максим", "Глюкоза", "Тату", "t.A.T.u.",
+    "Serebro", "Серебро", "Reflex", "Рефлекс",
+    "Дворовые коты", "Lube", "Любэ", "Руки Вверх",
+    "Иванушки", "На-На", "Мираж", "Ласковый май",
+    "Кар-мэн", "Кристина Орбакайте", "Жасмин",
+    "Shaman", "Шаман", "Клава Кока", "Мот", "Скриптонит",
+    "Morgenshtern", "Егор Крид", "Артем Пивоваров",
+    "Моя Мишель", "LOBODA", "Лобода", "Zivert", "Зиверт",
+]
+
+def is_cyrillic(text):
+    cyrillic_count = sum(1 for c in text if '\u0400' <= c <= '\u04FF')
+    return cyrillic_count / max(len(text), 1) > 0.3
+
 def fetch_json(url):
     req = urllib.request.Request(
         url,
@@ -72,9 +100,13 @@ def handler(event: dict, context) -> dict:
     if action == 'random':
         genre_id = params.get('genre', 'all')
         artist_filter = params.get('artist', '').strip()
+        lang = params.get('lang', 'any')  # 'ru', 'en', 'any'
 
         queries = GENRE_QUERIES.get(genre_id, GENRE_QUERIES['all'])
         query = random.choice(queries)
+
+        if lang == 'ru' and not artist_filter:
+            artist_filter = random.choice(RUSSIAN_ARTISTS)
 
         if artist_filter:
             url = f"https://lrclib.net/api/search?artist_name={urllib.parse.quote(artist_filter)}"
@@ -92,13 +124,23 @@ def handler(event: dict, context) -> dict:
 
         random.shuffle(results)
 
-        for track in results[:10]:
+        for track in results[:15]:
             lyrics = track.get('plainLyrics') or ''
             if not lyrics or track.get('instrumental'):
                 continue
+
+            if lang == 'ru' and not is_cyrillic(lyrics):
+                continue
+            if lang == 'en' and is_cyrillic(lyrics):
+                continue
+
             phrase = pick_random_phrase(lyrics)
             if not phrase:
                 continue
+
+            if lang == 'ru' and not is_cyrillic(phrase):
+                continue
+
             return {
                 'statusCode': 200,
                 'headers': CORS_HEADERS,
@@ -108,6 +150,7 @@ def handler(event: dict, context) -> dict:
                     'artist': track.get('artistName', ''),
                     'album': track.get('albumName', ''),
                     'genre': genre_id,
+                    'lang': lang,
                 }, ensure_ascii=False)
             }
 

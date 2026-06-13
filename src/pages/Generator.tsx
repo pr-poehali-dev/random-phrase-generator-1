@@ -7,6 +7,7 @@ export default function Generator() {
   const [genres, setGenres] = useState<Genre[]>([]);
   const [selectedGenre, setSelectedGenre] = useState("all");
   const [artistInput, setArtistInput] = useState("");
+  const [lang, setLang] = useState("any");
   const [phrase, setPhrase] = useState<PhraseResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -20,7 +21,7 @@ export default function Generator() {
   async function generate() {
     setLoading(true);
     setPhrase(null);
-    const result = await fetchRandomPhrase(selectedGenre, artistInput);
+    const result = await fetchRandomPhrase(selectedGenre, artistInput, lang);
     setPhrase(result);
     setAnimKey((k) => k + 1);
     addToHistory(result);
@@ -53,6 +54,26 @@ export default function Generator() {
 
         {/* Filters */}
         <div className="card-glass rounded-2xl p-5 mb-6 space-y-4">
+          {/* Language toggle */}
+          <div>
+            <p className="text-xs text-muted-foreground mb-2 uppercase tracking-widest">Язык</p>
+            <div className="flex gap-2">
+              {[
+                { id: "any", label: "🌍 Любой" },
+                { id: "ru", label: "🇷🇺 Русский" },
+                { id: "en", label: "🇬🇧 Английский" },
+              ].map((l) => (
+                <button
+                  key={l.id}
+                  onClick={() => setLang(l.id)}
+                  className={`tag-pill ${lang === l.id ? "active" : ""}`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Genre pills */}
           <div>
             <p className="text-xs text-muted-foreground mb-2 uppercase tracking-widest">Жанр</p>
