@@ -1,0 +1,20 @@
+{
+  "tests": [
+    {
+      "name": "Get genres list",
+      "method": "GET",
+      "path": "/?action=genres",
+      "expectedStatus": 200,
+      "expectedBody": {"genres": []},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get random phrase",
+      "method": "GET",
+      "path": "/?action=random",
+      "expectedStatus": 200,
+      "expectedBody": {"phrase": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
